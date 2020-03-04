@@ -314,10 +314,12 @@ def Run(options):
         suffix_list = ['.c', '.h']
 
     source_dirs = options.source_dir
-    ignore_files = options.ignore_files
-    logging.info(" ignore files: " + ignore_files)
+    ignore_files = options.ignore_files and options.ignore_files.split(' ') or []
+    logging.info("Ignored files: " + options.ignore_files)
+
     for sdir in source_dirs:
-        ReadSourceDocumentation(sdir, suffix_list, source_dirs, ignore_files)
+        abs_ignored_files = [os.path.join(sdir, x) for x in ignore_files]
+        ReadSourceDocumentation(sdir, suffix_list, abs_ignored_files)
 
     logging.info("Sources scanned")
 
@@ -3740,7 +3742,7 @@ def IgnorePath(path, source_dirs, ignore_files):
     return False
 
 
-def ReadSourceDocumentation(source_dir, suffix_list, source_dirs, ignore_files):
+def ReadSourceDocumentation(source_dir, suffix_list, ignore_files):
     """Read the documentation embedded in comment blocks in the source code.
 
     It recursively descends the source directory looking for source files and
@@ -3749,10 +3751,8 @@ def ReadSourceDocumentation(source_dir, suffix_list, source_dirs, ignore_files):
     Args:
         source_dir (str): the directory to scan.
         suffix_list (list): extensions to check
+        ignore_files (list): a list of ignored paths under source_dir
     """
-    if IgnorePath(source_dir, source_dirs, ignore_files):
-        return
-
     logging.info("Scanning source directory: %s", source_dir)
 
     # This array holds any subdirectories found.
@@ -3765,16 +3765,20 @@ def ReadSourceDocumentation(source_dir, suffix_list, source_dirs, ignore_files):
         fname = os.path.join(source_dir, ifile)
         if os.path.isdir(fname):
             subdirs.append(fname)
+        elif fname in ignore_files:
+            logging.info(f"File {fname} matches ignored files")
         else:
             for suffix in suffix_list:
                 if ifile.endswith(suffix):
-                    if not IgnorePath(fname, source_dirs, ignore_files):
-                        ScanSourceFile(fname, ignore_files)
-                        break
+                    ScanSourceFile(fname, ignore_files)
+                    break
 
     # Now recursively scan the subdirectories.
     for sdir in subdirs:
-        ReadSourceDocumentation(sdir, suffix_list, source_dirs, ignore_files)
+        if sdir in ignore_files:
+            logging.info(f"Directory {sdir} matches ignored files")
+            continue
+        ReadSourceDocumentation(sdir, suffix_list, ignore_files)
 
 
 def ScanSourceFile(ifile, ignore_files):
@@ -3793,8 +3797,8 @@ def ScanSourceFile(ifile, ignore_files):
         common.LogWarning(ifile, 1, "Can't find basename for this filename.")
         basename = ifile
 
-    # Check if the basename is in the list of files to ignore.
-    if re.search(r'(\s|^)%s(\s|$)' % re.escape(basename), ignore_files):
+    # Check if the filename is in the list of files to ignore.
+    if ifile in ignore_files:
         logging.info("Skipping source file: %s", ifile)
         return
 
