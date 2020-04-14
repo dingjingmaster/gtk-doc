@@ -163,6 +163,7 @@ configure_file(
 
 subdir('help')
 if get_option('tests')
+  cc = meson.get_compiler('c')
   subdir('tests')
 endif
 
