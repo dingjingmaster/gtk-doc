@@ -117,8 +117,8 @@ configure_file(
   input: 'gtkdoc_uninstalled.py.in',
   output: 'gtkdoc_uninstalled.py',
   configuration: {
-    'sourcedir': meson.current_source_dir(),
-    'builddir': meson.current_build_dir(),
+    'sourcedir': '/'.join(meson.current_source_dir().split('\\')),
+    'builddir': '/'.join(meson.current_build_dir().split('\\')),
   },
 )
 
