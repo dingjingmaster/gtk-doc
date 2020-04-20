@@ -2,7 +2,7 @@
 # -*- python; coding: utf-8 -*-
 #
 # gtk-doc - GTK DocBook documentation generator.
-# Copyright (C) 2007  David Nečas
+# Copyright (C) 2007  David Necas
 #               2007-2017  Stefan Sauer
 #
 # This program is free software; you can redistribute it and/or modify
